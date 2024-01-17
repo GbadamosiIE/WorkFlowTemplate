@@ -65,15 +65,17 @@ public async Task<IActionResult> CreateWorkFlow(CreateWorkflowDto payload)
             NextFlowId = Convert.ToInt32(branch.NextFlowId),
         }).ToList()
     }).ToList();
-
-    var variables = payload.Variables.Select(variable => new WorkflowVariable
+    var variables = new List<WorkflowVariable>();
+    if(payload.Variables != null)
     {
-        Name = variable.Name,
-        Type = variable.VariableType,
-        Value = variable.Value,
-        Workflow = workflow
-    }).ToList();
-
+       variables = payload.Variables.Select(variable => new WorkflowVariable
+        {
+            Name = variable.Name,
+            Type = variable.VariableType,
+            Value = variable.Value,
+            Workflow = workflow
+        }).ToList();
+    }
     await _context.Flows.AddRangeAsync(flows);
     await _context.Branches.AddRangeAsync(flows.SelectMany(flow => flow.BranchFlows));
     await _context.WorkflowVariables.AddRangeAsync(variables);
