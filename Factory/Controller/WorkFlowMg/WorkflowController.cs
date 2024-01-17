@@ -30,7 +30,7 @@ public class WorkflowController:ControllerBase
         }
     }
   
-    [HttpPost("createworkflow")]
+[HttpPost("createworkflow")]
 public async Task<IActionResult> CreateWorkFlow(CreateWorkflowDto payload)
 {
     if (payload == null)
@@ -105,7 +105,7 @@ public async Task<IActionResult> CreateWorkflowInstance(string workflowid, Creat
         Workflow = workflow,
         WorkflowInstanceStatusId = 1
     };
-    _context.WorkflowInstances.Add(workflowInstance);
+    await _context.WorkflowInstances.AddAsync(workflowInstance);
     await _context.SaveChangesAsync();
     return Ok("Workflow Instance Created Successfully");
 }
@@ -228,5 +228,23 @@ public async Task<IActionResult> FlowInstance(int FlowId, int workflowinstanceid
     await _context.SaveChangesAsync();
     return Ok("Flow Instance Created Successfully");
 }
-
+[HttpGet("flow-instance-status/{flowinstanceid}")]
+public async Task<IActionResult> FlowInstanceStatus(string flowinstanceid, string status){
+    if (flowinstanceid == null)
+    {
+        return Ok(new ArgumentNullException("Flow Instance Id is Null"));
+    }
+    var flowInstance = await _context.FlowInstances.FindAsync(Convert.ToInt32(flowinstanceid));
+    if (flowInstance == null)
+    {
+        return BadRequest("Flow Instance Not Found");
+    }
+    var statusId = await _context.FlowInstanceStatuses.FirstOrDefaultAsync(s => s.Name == status);
+    if (statusId == null)
+    {
+        return BadRequest("Flow Instance Status Not Found");
+    }
+    flowInstance.FlowInstanceStatusId = statusId.Id;
+    await _context.SaveChangesAsync();
+    return Ok("Flow Instance Status Changed Successfully");
 }
