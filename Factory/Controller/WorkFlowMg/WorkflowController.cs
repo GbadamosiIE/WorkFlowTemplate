@@ -248,3 +248,21 @@ public async Task<IActionResult> FlowInstanceStatus(string flowinstanceid, strin
     await _context.SaveChangesAsync();
     return Ok("Flow Instance Status Changed Successfully");
 }
+[HttpGet("flow-instance-history/{flowinstanceid}")]
+public async Task<IActionResult> FlowInstanceHistory(string flowinstanceid, string? FilterParameter){
+    if (flowinstanceid == null)
+    {
+        return Ok(new ArgumentNullException("Flow Instance Id is Null"));
+    }
+    var flowInstance = await _context.FlowInstances.Where(f => f.Id == Convert.ToInt32(flowinstanceid)).ToListAsync();
+    if (FilterParameter == null)
+    {
+        return Ok(flowInstance);
+    }
+    else
+    {
+        var filteredFlowInstances = flowInstance.Where(f => f.StartedOn.ToString().Contains(FilterParameter) || f.FlowInstanceStatusId.ToString().Contains(FilterParameter));
+        return Ok(filteredFlowInstances);
+    }
+}
+}
