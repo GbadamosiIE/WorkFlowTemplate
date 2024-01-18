@@ -52,7 +52,6 @@ public async Task<IActionResult> CreateWorkFlow(CreateWorkflowDto payload)
     };
 
     await _context.Workflows.AddAsync(workflow);
-
     var flows = payload.Flows.Select(flow => new Flow
     {
         Name = flow.Name,
@@ -75,10 +74,11 @@ public async Task<IActionResult> CreateWorkFlow(CreateWorkflowDto payload)
             Value = variable.Value,
             Workflow = workflow
         }).ToList();
+        await _context.WorkflowVariables.AddRangeAsync(variables);
     }
     await _context.Flows.AddRangeAsync(flows);
     await _context.Branches.AddRangeAsync(flows.SelectMany(flow => flow.BranchFlows));
-    await _context.WorkflowVariables.AddRangeAsync(variables);
+    
 
     await _context.SaveChangesAsync();
 
@@ -265,6 +265,23 @@ public async Task<IActionResult> FlowInstanceHistory(string flowinstanceid, stri
     {
         var filteredFlowInstances = flowInstance.Where(f => f.StartedOn.ToString().Contains(FilterParameter) || f.FlowInstanceStatusId.ToString().Contains(FilterParameter));
         return Ok(filteredFlowInstances);
+    }
+}
+[HttpGet("branch-instance/{branchid}")]
+public async Task<IActionResult> BranchInstance(string branchid, string? FilterParameter){
+    if (branchid == null)
+    {
+        return Ok(new ArgumentNullException("Branch Id is Null"));
+    }
+    var branch = await _context.Branches.Where(b => b.Id == Convert.ToInt32(branchid)).ToListAsync();
+    if (FilterParameter == null)
+    {
+        return Ok(branch);
+    }
+    else
+    {
+        var filteredBranches = branch.Where(b => b.Name.Contains(FilterParameter) || b.Description.Contains(FilterParameter) || b.NextFlowId.ToString().Contains(FilterParameter));
+        return Ok(filteredBranches);
     }
 }
 }
